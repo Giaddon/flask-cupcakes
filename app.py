@@ -2,7 +2,8 @@
 
 from flask import Flask, jsonify, request
 from flask_debugtoolbar import DebugToolbarExtension
-from models import db, connect_db, Cupcake
+from models import db, connect_db, Cupcake, DEFAULT_IMG 
+
 
 app = Flask(__name__)
 
@@ -17,6 +18,7 @@ app.config['SQLALCHEMY_ECHO'] = True
 
 connect_db(app)
 
+HTTP_STATUS_CODE_CREATED = 201
 
 
 @app.route("/api/cupcakes")
@@ -42,27 +44,23 @@ def inspect_cupcake(id):
 
 @app.route("/api/cupcakes", methods=["POST"])
 def create_cupcake():
-
-    flavor = ""
-    size = ""
-    rating = 0
-    image = None
-
+    """ validates the body of the request; then create a cupcake with data from the request """
+    
 
     try:
         flavor = request.json["flavor"]
-    except:
-        return ("Error with data submission", 400)
+    except KeyError:
+        return ("Flavor: wrong input format", 400)
 
     try:
         size = request.json["size"]
-    except:
-        return ("Error with data submission", 400)
+    except KeyError:
+        return ("Size: wrong input format", 400)
 
     try:
         rating = request.json["rating"]
-    except:
-        return ("Error with data submission", 400)
+    except KeyError:
+        return ("Rating: wrong input format", 400)
 
     image = request.json.get("image", None)
 
@@ -74,4 +72,31 @@ def create_cupcake():
     db.session.add(new_cupcake)
     db.session.commit()
 
-    return ( jsonify(cupcake=new_cupcake.serialize()), 201 )
+    return ( jsonify(cupcake=new_cupcake.serialize()), HTTP_STATUS_CODE_CREATED )
+
+@app.route("/api/cupcakes/<int:id>", methods=["PATCH"])
+def cupcake_update(id):
+    """Upadate a cupcake with PATCH method, return updated JSON """
+
+    cupcake = Cupcake.query.get_or_404(id)
+
+    cupcake.flavor = request.json['flavor']
+    cupcake.rating = request.json['rating']
+    cupcake.size = request.json['size']
+    cupcake.image = request.json.get("image", DEFAULT_IMG)
+
+    db.session.add(cupcake)
+    db.session.commit()
+
+    return jsonify(cupcake=cupcake.serialize())
+
+@app.route("/api/cupcakes/<int:id>", methods=["DELETE"])
+def cupcake_delete(id):
+    """Delete cupcake with the id passed in the URL """
+
+    cupcake = Cupcake.query.get_or_404(id)
+
+    db.session.delete(cupcake)
+    db.session.commit()
+
+    return jsonify(message="Deleted")

@@ -10,6 +10,7 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+DEFAULT_IMG = "https://tinyurl.com/demo-cupcake"
 
 class Cupcake(db.Model):
     """Cupcake Class"""
@@ -22,9 +23,10 @@ class Cupcake(db.Model):
                        nullable=False)
     size = db.Column(db.String,
                      nullable=False)
-    rating = db.Column(db.Float, nullable=False)
+    rating = db.Column(db.Float, 
+                     nullable=False)
     image  = db.Column(db.String, 
-                       default="https://tinyurl.com/demo-cupcake",
+                       default= DEFAULT_IMG,
                        nullable=False)
 
     def serialize(self):
@@ -37,4 +39,6 @@ class Cupcake(db.Model):
             "size": self.size,
             "rating": self.rating,
             "image": self.image
-        } 
+        }
+
+    
