@@ -1,8 +1,9 @@
 """Flask app for Cupcakes"""
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_debugtoolbar import DebugToolbarExtension
-from models import db, connect_db, Cupcake, DEFAULT_IMG 
+from models import db, connect_db, Cupcake, DEFAULT_IMG
+from sqlalchemy import or_
 
 
 app = Flask(__name__)
@@ -21,13 +22,18 @@ connect_db(app)
 HTTP_STATUS_CODE_CREATED = 201
 
 
+@app.route("/")
+def homepage():
+
+    return render_template("cupcake_list.html")
+
+
 @app.route("/api/cupcakes")
 def list_cupcakes():
     "Returns JSON object containing all cupcakes"
     cupcake_list = Cupcake.query.all()
 
     serialized_list = [c.serialize() for c in cupcake_list]
-
 
     return jsonify(cupcakes=serialized_list)
 
@@ -45,7 +51,6 @@ def inspect_cupcake(id):
 @app.route("/api/cupcakes", methods=["POST"])
 def create_cupcake():
     """ validates the body of the request; then create a cupcake with data from the request """
-    
 
     try:
         flavor = request.json["flavor"]
@@ -64,15 +69,16 @@ def create_cupcake():
 
     image = request.json.get("image", None)
 
-    new_cupcake = Cupcake(flavor=flavor, 
+    new_cupcake = Cupcake(flavor=flavor,
                           size=size,
                           rating=rating,
-                          image=image) 
+                          image=image)
 
     db.session.add(new_cupcake)
     db.session.commit()
 
-    return ( jsonify(cupcake=new_cupcake.serialize()), HTTP_STATUS_CODE_CREATED )
+    return (jsonify(cupcake=new_cupcake.serialize()), HTTP_STATUS_CODE_CREATED)
+
 
 @app.route("/api/cupcakes/<int:id>", methods=["PATCH"])
 def cupcake_update(id):
@@ -90,6 +96,7 @@ def cupcake_update(id):
 
     return jsonify(cupcake=cupcake.serialize())
 
+
 @app.route("/api/cupcakes/<int:id>", methods=["DELETE"])
 def cupcake_delete(id):
     """Delete cupcake with the id passed in the URL """
@@ -100,3 +107,20 @@ def cupcake_delete(id):
     db.session.commit()
 
     return jsonify(message="Deleted")
+
+
+@app.route("/api/search/<search_terms>")
+def search_cupcakes(search_terms):
+    """Query database for cupcakes matching search term,
+    respond with JSON of results"""
+    
+    # Should work with params? 
+    # for seperate fields
+    search_result = Cupcake.query.filter(or_(Cupcake.flavor.ilike(f"%{search_terms}%"), 
+                                        Cupcake.size.ilike(f"%{search_terms}%"))).all()
+
+    if search_result:
+        serialized_list = [c.serialize() for c in search_result]
+        return jsonify(cupcakes=serialized_list)
+    else:
+        return "No cupcakes found."

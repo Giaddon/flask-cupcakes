@@ -1,0 +1,14 @@
+.cupcake-list img {
+    max-width: 150px;
+}
+
+.cupcake {
+    border: 1px solid skyblue;
+    border-radius: 2px;
+    margin-bottom: 15px;
+    padding: 5px;
+}
+
+.search-form {
+    margin-bottom: 15px;
+}

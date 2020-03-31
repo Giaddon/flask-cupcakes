@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Search</h2>
+    <form id="search-form" class="search-form">
+        <input id="search-field" type="text" placeholder="search">
+        <button id="search-submit">Find those cupcakes!</button>
+    </form>
+    <div id="search-message"></div>
+    <section class="cupcake-list" id="cupcake-list">
+        <h1>Your cupcakes:</h1>
+    </section>
+    <form action="/cupcakes" method="POST">
+        <input id="form-flavor" type="text" name="flavor" placeholder="Flavor" required>
+        <input id="form-size" type="text" name="size" placeholder="Size" required>
+        <input id="form-rating" type="number" name="rating" placeholder="Rating" required>
+        <input id="form-image" type="text" name="image" placeholder="Image">
+        <button id="new-cupcake-button">Create My Cupcake!</button>
+    </form>
+{% endblock %}
